@@ -1,0 +1,67 @@
+name: Build Sell & Repair Test APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+
+    steps:
+      - name: Checkout POS source
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Extract reconstructed POS source
+        run: |
+          rm -rf recovered-pos
+          mkdir recovered-pos
+          unzip -q sell-repair-pos-editable-foundation.zip -d recovered-pos
+          test -f recovered-pos/App.tsx
+          test -d recovered-pos/src
+
+      - name: Create React Native 0.81 Android shell
+        run: |
+          npx --yes @react-native-community/cli@latest init SellRepairPOS --version 0.81.0 --skip-git-init --skip-install
+
+      - name: Overlay reconstructed POS source
+        run: |
+          cp recovered-pos/App.tsx SellRepairPOS/App.tsx
+          rm -rf SellRepairPOS/src
+          cp -R recovered-pos/src SellRepairPOS/src
+
+      - name: Install dependencies
+        working-directory: SellRepairPOS
+        run: npm install
+
+      - name: Build release APK with bundled JavaScript
+        working-directory: SellRepairPOS/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon
+
+      - name: Prepare APK
+        run: |
+          mkdir -p apk-output
+          cp SellRepairPOS/android/app/build/outputs/apk/release/app-release.apk apk-output/Sell-Repair-POS-TEST.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Sell-Repair-POS-TEST-APK
+          path: apk-output/Sell-Repair-POS-TEST.apk
+          retention-days: 14
