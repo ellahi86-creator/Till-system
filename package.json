@@ -1,0 +1,17 @@
+{
+  "name": "sell-repair-pos-editable",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test:upsell": "node tests/upsell.test.js",
+    "test:recovery": "node tests/auth-contract.test.js && node tests/catalog-normalizers.test.js && node tests/stock-query.test.js && node tests/store-variant-contract.test.js && node tests/checkout-contract.test.js && node tests/upsell.test.js"
+  },
+  "dependencies": {
+    "react": "19.1.0",
+    "react-native": "0.81.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.0",
+    "typescript": "^5.8.0"
+  }
+}
